@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>真ikun免费图床</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://imgapi.xl0408.top/');
+            background-size: cover;
+            background-position: center;
+            filter: blur(8px) brightness(0.7);
+            z-index: -1;
+        }
+
+        .container, .hitokoto-container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .upload-area {
+            margin-bottom: 25px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 20px;
+            cursor: pointer;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .file-input-wrapper:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .file-input-button {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            color: #ffffff;
+            font-size: 16px;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        button {
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            padding: 12px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            width: 100%;
+            max-width: 200px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .result {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            font-size: 16px;
+            min-height: 40px;
+            overflow-wrap: break-word;
+            word-break: break-all;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .hitokoto-container {
+            max-width: 600px;
+        }
+
+        .hitokoto-content {
+            font-size: 20px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .hitokoto-source {
+            font-size: 14px;
+            opacity: 0.8;
+            font-style: italic;
+        }
+
+        .runtime-container {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 10px 15px;
+            font-size: 12px;
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .runtime-label {
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        .runtime-value span {
+            display: inline-block;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .container, .hitokoto-container {
+                padding: 25px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+            
+            .hitokoto-content {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hitokoto-container">
+        <p id="hitokoto" class="hitokoto-content">正在加载一言...</p>
+        <p id="hitokoto-source" class="hitokoto-source"></p>
+    </div>
+
+    <div class="container">
+        <h1>文件上传</h1>
+        <div class="upload-area">
+            <form id="uploadForm">
+                <div class="file-input-wrapper">
+                    <div class="file-input-button" id="fileButton">选择文件</div>
+                    <input type="file" id="fileInput" name="file" accept="image/*" required />
+                </div>
+                <button type="submit">上传文件</button>
+            </form>
+        </div>
+        <div id="result" class="result"></div>
+    </div>
+
+    <div class="runtime-container">
+        <span class="runtime-label">运行时间:</span>
+        <span class="runtime-value">
+            <span id="runtimeDays">0</span>天
+            <span id="runtimeHours">00</span>时
+            <span id="runtimeMinutes">00</span>分
+            <span id="runtimeSeconds">00</span>秒
+        </span>
+    </div>
+
+    <script>
+        // 获取一言
+        async function fetchHitokoto() {
+            try {
+                const response = await fetch('https://international.v1.hitokoto.cn/');
+                const data = await response.json();
+                
+                document.getElementById('hitokoto').textContent = data.hitokoto;
+                
+                let sourceText = '';
+                if (data.from_who) {
+                    sourceText += `「${data.from}」 ${data.from_who}`;
+                } else if (data.from) {
+                    sourceText += `『${data.from}』`;
+                }
+                
+                document.getElementById('hitokoto-source').textContent = sourceText;
+            } catch (error) {
+                document.getElementById('hitokoto').textContent = '加载一言失败...';
+                console.error('Error fetching hitokoto:', error);
+            }
+        }
+        
+        // 文件上传功能
+        const form = document.getElementById('uploadForm');
+        const resultDiv = document.getElementById('result');
+        const fileInput = document.getElementById('fileInput');
+        const fileButton = document.getElementById('fileButton');
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                fileButton.textContent = e.target.files[0].name;
+            } else {
+                fileButton.textContent = '选择文件';
+            }
+        });
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                resultDiv.innerHTML = '<p>请先选择文件！</p>';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch('https://api.xinyew.cn/api/jdtc', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                if (data.errno === 0) {
+                    resultDiv.innerHTML = `
+                        <p>上传成功！</p>
+                        <p>图片链接: <a href="${data.data.url}" target="_blank" style="color: #ffffff; text-decoration: underline;">${data.data.url}</a></p>
+                        <p>图片文件名: ${data.data.imgFile}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p>${data.error}</p>`;
+                    setTimeout(() => location.reload(), 2000);
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p>请求失败：${error.message}</p>`;
+                setTimeout(() => location.reload(), 3000);
+            }
+        });
+        
+        // 计算网站运行时间
+        function updateRuntime() {
+            const startTime = new Date(2025, 6, 28);
+            startTime.setHours(0, 0, 0, 0);
+            
+            const currentTime = new Date();
+            const diffTime = currentTime - startTime;
+            
+            const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diffTime % (1000 * 60)) / 1000);
+            
+            document.getElementById('runtimeDays').textContent = days;
+            document.getElementById('runtimeHours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('runtimeMinutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('runtimeSeconds').textContent = seconds.toString().padStart(2, '0');
+        }
+        
+        // 初始化
+        fetchHitokoto();
+        updateRuntime();
+        
+        // 定时更新
+        setInterval(fetchHitokoto, 30000);
+        setInterval(updateRuntime, 1000);
+    </script>
+</body>
+</html>
