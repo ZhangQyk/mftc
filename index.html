@@ -266,6 +266,9 @@
                 return;
             }
             
+            // 显示上传中提示
+            resultDiv.innerHTML = '<p>上传中...</p>';
+            
             const formData = new FormData();
             formData.append('file', file);
             
@@ -316,7 +319,7 @@
         updateRuntime();
         
         // 定时更新
-        setInterval(fetchHitokoto, 30000);
+        setInterval(fetchHitokoto, 15000);
         setInterval(updateRuntime, 1000);
     </script>
 </body>
