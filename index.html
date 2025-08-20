@@ -223,21 +223,45 @@
 	</div>
 
 	<script>
-		/* ===== 1. 获取一言 & 运行时 ===== */
-		async function fetchHitokoto() { /* 原封不动 */ }
-		function updateRuntime() { /* 原封不动 */ }
+		/* ================= 1. 一言 ================= */
+		async function fetchHitokoto() {
+		  try {
+		    const res  = await fetch('https://international.v1.hitokoto.cn/');
+		    const data = await res.json();
+		    document.getElementById('hitokoto').textContent = data.hitokoto;
+		    document.getElementById('hitokoto-source').textContent =
+		      data.from_who ? `「${data.from}」 ${data.from_who}` :
+		      data.from     ? `『${data.from}』` : '';
+		  } catch {
+		    document.getElementById('hitokoto').textContent = '加载一言失败...';
+		  }
+		}
 		
-		/* ===== 2. 多文件上传 ===== */
-		const form        = document.getElementById('uploadForm');
-		const resultDiv   = document.getElementById('result');
-		const fileInput   = document.getElementById('fileInput');
-		const fileButton  = document.getElementById('fileButton');
-		const uploadBtn   = form.querySelector('button[type=submit]');
+		/* ================= 2. 网站运行时间 ================= */
+		function updateRuntime() {
+		  const start = new Date(2025, 7, 1, 0, 0, 0, 0);
+		  const diff  = Date.now() - start;
+		  const d = Math.floor(diff / 864e5);
+		  const h = String(Math.floor(diff / 36e5) % 24).padStart(2, '0');
+		  const m = String(Math.floor(diff / 6e4)  % 60).padStart(2, '0');
+		  const s = String(Math.floor(diff / 1e3)  % 60).padStart(2, '0');
+		  runtimeDays.textContent    = d;
+		  runtimeHours.textContent   = h;
+		  runtimeMinutes.textContent = m;
+		  runtimeSeconds.textContent = s;
+		}
+		
+		/* ================= 3. 多文件上传 ================= */
+		const form       = document.getElementById('uploadForm');
+		const resultDiv  = document.getElementById('result');
+		const fileInput  = document.getElementById('fileInput');
+		const fileButton = document.getElementById('fileButton');
+		const uploadBtn  = form.querySelector('button[type=submit]');
 		
 		/* 允许一次选多张 */
 		fileInput.setAttribute('multiple', 'multiple');
 		
-		/* 选中文件后把文件名显示在按钮上 */
+		/* 显示已选文件名 */
 		fileInput.addEventListener('change', () => {
 		  const names = [...fileInput.files].map(f => f.name);
 		  fileButton.textContent = names.length ? names.join(', ') : '选择文件';
@@ -252,7 +276,6 @@
 		    return;
 		  }
 		
-		  /* 禁用按钮，防止重复点击 */
 		  uploadBtn.disabled = true;
 		  uploadBtn.textContent = '上传中...';
 		  resultDiv.innerHTML = '<p>正在上传 0 / ' + files.length + '</p>';
@@ -261,56 +284,49 @@
 		  const failed  = [];
 		
 		  for (let i = 0; i < files.length; i++) {
-		    const formData = new FormData();
-		    formData.append('file', files[i]);
-		
+		    const fd = new FormData();
+		    fd.append('file', files[i]);
 		    try {
 		      const res  = await fetch('https://api.xinyew.cn/api/jdtc', {
 		        method: 'POST',
-		        body: formData
+		        body: fd
 		      });
 		      const data = await res.json();
-		
 		      if (data.errno === 0) {
-		        success.push(data.data);
+		        success.push({ name: files[i].name, url: data.data.url });
 		      } else {
-		        failed.push({ file: files[i].name, reason: data.error || '未知错误' });
+		        failed.push({ name: files[i].name });
 		      }
-		    } catch (err) {
-		      failed.push({ file: files[i].name, reason: err.message });
+		    } catch {
+		      failed.push({ name: files[i].name });
 		    }
-		
-		    /* 实时刷新进度 */
 		    resultDiv.innerHTML = `<p>正在上传 ${i + 1} / ${files.length}</p>`;
 		  }
 		
-		  /* 上传完成，汇总结果 */
-		  let html = '';
-		  if (success.length) {
-		    html += '<p>成功上传：</p><ul>';
-		    success.forEach(item => {
-		      html += `<li><a href="${item.url}" target="_blank">${item.imgFile}</a></li>`;
-		    });
-		    html += '</ul>';
-		  }
+		  /* 结果：文件名 + 直链 */
+		  let html = '<p>成功上传：</p><ul style="list-style:none;padding:0;margin:0;">';
+		  success.forEach(item => {
+		    html += `<li><a href="${item.url}" target="_blank" style="color:#fff;text-decoration:underline;">${item.name}</a></li>`;
+		  });
+		  html += '</ul>';
 		  if (failed.length) {
-		    html += '<p style="color:#ff6b6b">失败：</p><ul>';
-		    failed.forEach(f => html += `<li>${f.file} — ${f.reason}</li>`);
-		    html += '</ul>';
+		    html += '<p style="color:#ff6b6b;margin-top:8px;">失败：' +
+		            failed.map(f => f.name).join('，') + '</p>';
 		  }
 		  resultDiv.innerHTML = html;
 		
-		  /* 恢复按钮 */
 		  uploadBtn.disabled = false;
 		  uploadBtn.textContent = '上传文件';
 		});
 		
-		/* ===== 3. 初始化 ===== */
+		/* ================= 4. 初始化 & 定时器 ================= */
 		fetchHitokoto();
 		updateRuntime();
 		setInterval(fetchHitokoto, 10000);
 		setInterval(updateRuntime, 1000);
 	</script>
+
+
 
 </body>
 
